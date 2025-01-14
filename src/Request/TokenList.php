@@ -12,4 +12,10 @@ use Owlookit\Tiptoppay\BaseRequest;
  */
 class TokenList extends BaseRequest
 {
+    public int $PageNumber;
+
+    public function __construct(int $pageNumber)
+    {
+        $this->PageNumber = $pageNumber;
+    }
 }

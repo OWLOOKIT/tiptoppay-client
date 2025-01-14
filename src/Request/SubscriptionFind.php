@@ -13,4 +13,9 @@ use Owlookit\Tiptoppay\BaseRequest;
 class SubscriptionFind extends BaseRequest
 {
     public string $accountId;
+
+    public function __construct(string $accountId)
+    {
+        $this->accountId = $accountId;
+    }
 }

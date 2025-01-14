@@ -21,4 +21,20 @@ class NotificationsUpdate extends BaseRequest
     public ?string $httpMethod;
     public ?string $encoding;
     public ?string $format;
+
+    public function __construct(
+        string  $type,
+        ?bool   $isEnabled          = null,
+        ?string $address            = null,
+        ?string $httpMethod         = null,
+        ?string $encoding           = null,
+        ?string $format             = null
+    ) {
+        $this->type       = $type;
+        $this->isEnabled  = $isEnabled;
+        $this->address    = $address;
+        $this->httpMethod = $httpMethod;
+        $this->encoding   = $encoding;
+        $this->format     = $format;
+    }
 }

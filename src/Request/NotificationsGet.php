@@ -11,9 +11,10 @@ use Owlookit\Tiptoppay\BaseRequest;
  */
 class NotificationsGet extends BaseRequest
 {
-    /**
-     * @see https://developers.tiptoppay.kz/#tipy-operatsiy
-     * @var string
-     */
-    public string $type;
+    public int $TransactionId;
+
+    public function __construct(int $transactionId)
+    {
+        $this->TransactionId = $transactionId;
+    }
 }

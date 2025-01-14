@@ -31,4 +31,32 @@ class SubscriptionCreate extends BaseRequest
     public int         $period;
     public ?int        $maxPeriods;
     public ?string     $customerReceipt;
+
+    public function __construct(
+        string $token,
+        string $accountId,
+        string $description,
+        string $email,
+        int|float $amount,
+        string $currency,
+        bool $requireConfirmation,
+        DateTime $startDate,
+        string $interval,
+        int $period,
+        ?int $maxPeriods = null,
+        ?string $customerReceipt = null
+    ) {
+        $this->token              = $token;
+        $this->accountId          = $accountId;
+        $this->description        = $description;
+        $this->email              = $email;
+        $this->amount             = $amount;
+        $this->currency           = $currency;
+        $this->requireConfirmation = $requireConfirmation;
+        $this->startDate          = $startDate;
+        $this->interval           = $interval;
+        $this->period             = $period;
+        $this->maxPeriods         = $maxPeriods;
+        $this->customerReceipt    = $customerReceipt;
+    }
 }

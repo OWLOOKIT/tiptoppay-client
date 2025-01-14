@@ -30,4 +30,31 @@ class SubscriptionUpdate extends BaseRequest
     public ?int      $maxPeriods;
     public ?string   $customerReceipt;
     public ?string   $cultureName;
+
+    public function __construct(
+        string $id,
+        ?string $description = null,
+        int|float $amount = 0,
+        ?string $currency = null,
+        ?bool $requireConfirmation = null,
+        ?DateTime $startDate = null,
+        ?string $interval = null,
+        ?int $period = null,
+        ?int $maxPeriods = null,
+        ?string $customerReceipt = null,
+        ?string $cultureName = null
+    ) {
+        $this->id                 = $id;
+        $this->description        = $description;
+        $this->amount             = $amount;
+        $this->currency           = $currency;
+        $this->requireConfirmation = $requireConfirmation;
+        $this->startDate          = $startDate;
+        $this->interval           = $interval;
+        $this->period             = $period;
+        $this->maxPeriods         = $maxPeriods;
+        $this->customerReceipt    = $customerReceipt;
+        $this->cultureName        = $cultureName;
+    }
+
 }
