@@ -17,8 +17,6 @@ use Owlookit\Tiptoppay\Request\PaymentsGet;
 use Owlookit\Tiptoppay\Request\PaymentsList;
 use Owlookit\Tiptoppay\Request\PaymentsListV2;
 use Owlookit\Tiptoppay\Request\PaymentsRefund;
-use Owlookit\Tiptoppay\Request\PaymentsSbpLink;
-use Owlookit\Tiptoppay\Request\PaymentsSbpQr;
 use Owlookit\Tiptoppay\Request\PaymentsVoid;
 use Owlookit\Tiptoppay\Request\Post3DS;
 use Owlookit\Tiptoppay\Request\Receipt\CorrectionReceiptData;
@@ -44,6 +42,7 @@ use Owlookit\Tiptoppay\Response\TransactionWith3dsResponse;
 use GuzzleHttp\Client;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Библиотека методов для работы с Tiptoppay
@@ -51,50 +50,48 @@ use Psr\Log\LoggerInterface;
  */
 class Library
 {
-    const DEFAULT_URL = 'https://api.tiptoppay.kz/';
+    public const DEFAULT_URL = 'https://api.tiptoppay.kz/';
 
-    protected string  $publicId;
-    protected string  $pass;
-    protected string  $url;
-    protected Client  $client;
-    protected bool    $idempotency    = false;
+    protected string $publicId;
+    protected string $pass;
+    protected string $url;
+    protected Client $client;
+    protected bool $idempotency = false;
     protected ?string $idempotencyKey = null;
+    protected ?LoggerInterface $logger;
 
-    protected $logger;
-
-    /**
-     * Library constructor.
-     * @param string $publicId
-     * @param string $pass
-     * @param string|null $cpUrlApi
-     * @param array|null $options
-     * @param Client|null $client
-     * @param LoggerInterface|null $logger
-     */
     public function __construct(
         string $publicId,
         string $pass,
         ?string $cpUrlApi = null,
         ?array $options = null,
-        Client $client = null,
-        LoggerInterface $logger = null
+        ?Client $client = null,
+        ?LoggerInterface $logger = null
     ) {
-        $this->url      = $cpUrlApi === null ? self::DEFAULT_URL : $cpUrlApi;
-        $this->publicId = $publicId;
-        $this->pass     = $pass;
-        $data           = [
-            'base_uri' => $this->url,
-            'auth'     => [
-                $this->publicId,
-                $this->pass,
-            ],
-            'expect'   => false
-        ];
-        if ($options) {
-            $data = array_merge($options, $data);
+        if ($publicId === '') {
+            throw new RuntimeException('TipTopPay publicId must not be empty.');
         }
 
-        $this->client = $client ?? new Client($data);
+        if ($pass === '') {
+            throw new RuntimeException('TipTopPay password must not be empty.');
+        }
+
+        $this->url = rtrim($cpUrlApi ?? self::DEFAULT_URL, '/') . '/';
+        $this->publicId = $publicId;
+        $this->pass = $pass;
+
+        $defaults = [
+            'base_uri' => $this->url,
+            'auth' => [$this->publicId, $this->pass],
+            'expect' => false,
+            'timeout' => 15,
+            'connect_timeout' => 10,
+            'http_errors' => false,
+        ];
+
+        $config = $options !== null ? array_replace($defaults, $options) : $defaults;
+
+        $this->client = $client ?? new Client($config);
         $this->logger = $logger;
     }
 
@@ -513,28 +510,36 @@ class Library
     }
 
     /**
-     * Запрос по api
-     * @param string $method HTTP method (get, post, etc)
-     * @param array $postData send data
-     * @param bool $asJson send with JSON body
-     * @return ResponseInterface
+     * @param string $apiMethod API path segment, for example payments/get
+     * @param array<string, mixed> $postData
+     * @param bool $asJson
      */
-    public function sendRequest(string $method, array $postData = [], bool $asJson = false): ResponseInterface
+    public function sendRequest(string $apiMethod, array $postData = [], bool $asJson = false): ResponseInterface
     {
+        $options = [];
+
         if ($this->idempotency) {
-            $options['headers']['X-Request-ID'] = $this->idempotencyKey ?? $this->getRequestId($method, $postData);
+            $requestId = $this->idempotencyKey ?? $this->getRequestId($apiMethod, $postData);
+            $options['headers']['X-Request-ID'] = $requestId;
         }
 
         if ($asJson) {
             $options['headers']['Content-Type'] = 'application/json';
-            $options['json']                    = $postData;
+            $options['json'] = $postData;
         } else {
             $options['headers']['Content-Type'] = 'application/x-www-form-urlencoded';
-            $options['form_params']             = $postData;
+            $options['form_params'] = $postData;
         }
 
+        if ($this->logger !== null) {
+            $this->logger->debug('TipTopPay request prepared', [
+                'api_method' => $apiMethod,
+                'idempotency' => $this->idempotency,
+                'request_id' => $options['headers']['X-Request-ID'] ?? null,
+            ]);
+        }
 
-        return $this->client->post('/' . $method, $options);
+        return $this->client->post('/' . ltrim($apiMethod, '/'), $options);
     }
 
     /**

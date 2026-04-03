@@ -1,62 +1,61 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Owlookit\Tiptoppay;
 
-use Owlookit\Tiptoppay\Enum\BoolField;
 use MyCLabs\Enum\Enum;
+use Owlookit\Tiptoppay\Enum\BoolField;
 
-/**
- * Базовый класс моделей фондю
- * Class BaseRequest
- * @package Owlookit\Tiptoppay
- */
 class BaseRequest
 {
     /**
-     * Данные в нужном для запроса формате
-     * @return array
+     * @return array<string, mixed>
      */
     public function asArray(): array
     {
-        $data   = [];
-        $fields = get_object_vars($this);
-        foreach ($fields as $field => $value) {
-            $key = ucfirst($field);
-            //Подменим booleans
-            if ($value === true) {
-                $value = BoolField::TRUE;
-            } elseif ($value === false) {
-                $value = BoolField::FALSE;
-            }
-            //Пустые поля слать не будем
+        $data = [];
+
+        foreach (get_object_vars($this) as $field => $value) {
             if ($value === null) {
                 continue;
             }
-            $data[$key] = $value;
 
-            if ($value instanceof BaseRequest) {
-                $data[$key] = $value->asArray();
-            }
-
-            if (is_array($value)) {
-                $computed = [];
-                foreach ($value as $item) {
-                    if ($item instanceof BaseRequest) {
-                        $item = $item->asArray();
-                    }
-                    if ($value instanceof Enum) {
-                        $item = $value->getValue();
-                    }
-                    $computed[] = $item;
-                }
-                $data[$key] = $computed;
-            }
-            if ($value instanceof Enum) {
-                $data[$key] = $value->getValue();
-            }
+            $key = ucfirst($field);
+            $data[$key] = $this->normalizeValue($value);
         }
 
         return $data;
     }
 
+    private function normalizeValue(mixed $value): mixed
+    {
+        if ($value === true) {
+            return BoolField::TRUE;
+        }
+
+        if ($value === false) {
+            return BoolField::FALSE;
+        }
+
+        if ($value instanceof BaseRequest) {
+            return $value->asArray();
+        }
+
+        if ($value instanceof Enum) {
+            return $value->getValue();
+        }
+
+        if (is_array($value)) {
+            $normalized = [];
+
+            foreach ($value as $itemKey => $itemValue) {
+                $normalized[$itemKey] = $this->normalizeValue($itemValue);
+            }
+
+            return $normalized;
+        }
+
+        return $value;
+    }
 }
