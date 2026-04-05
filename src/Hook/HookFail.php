@@ -20,7 +20,7 @@ class HookFail extends BaseHook
     public ?string $cardLastFour  = null;
     public ?string $cardType      = null;
     public ?string $cardExpDate   = null;
-    public ?int    $testMode      = null;
+    public ?bool   $testMode      = null;
     public ?string $reason        = null;
     public ?int    $reasonCode    = null;
     public ?string $operationType = null;

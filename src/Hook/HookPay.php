@@ -11,22 +11,25 @@ use Owlookit\Tiptoppay\BaseHook;
 class HookPay extends BaseHook
 {
     // Required
-
-    public ?int    $transactionId = null;
-    public ?float  $amount        = null;
-    public ?string $currency      = null;
-    public ?string $dateTime      = null;
-    public ?string $cardFirstSix  = null;
-    public ?string $cardLastFour  = null;
-    public ?string $cardType      = null;
-    public ?string $cardExpDate   = null;
-    public ?int    $testMode      = null;
-    public ?string $status        = null;
-    public ?string $operationType = null;
-    public ?string $gatewayName   = null;
+    public ?int    $transactionId   = null;
+    public ?float  $amount          = null;
+    public ?string $currency        = null;
+    public ?string $dateTime        = null;
+    public ?string $cardFirstSix    = null;
+    public ?string $cardLastFour    = null;
+    public ?string $cardType        = null;
+    public ?string $cardExpDate     = null;
+    public ?bool   $testMode        = null;
+    public ?string $status          = null;
+    public ?string $operationType   = null;
+    public ?string $gatewayName     = null;
+    public ?float  $paymentAmount   = null;
+    public ?string $paymentCurrency = null;
+    public ?float  $ipLatitude      = null;
+    public ?float  $ipLongitude     = null;
+    public ?string $authCode        = null;
 
     // Not required
-
     public ?string $invoiceId                             = null;
     public ?string $accountId                             = null;
     public ?string $subscriptionId                        = null;

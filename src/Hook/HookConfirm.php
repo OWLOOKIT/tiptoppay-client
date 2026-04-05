@@ -20,7 +20,7 @@ class HookConfirm extends BaseHook
     public ?string $cardLastFour  = null;
     public ?string $cardType      = null;
     public ?string $cardExpDate   = null;
-    public ?int    $testMode      = null;
+    public ?bool   $testMode      = null;
     public ?string $status        = null;
 
     // Not required

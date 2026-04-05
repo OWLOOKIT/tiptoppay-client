@@ -21,7 +21,7 @@ class HookCheck extends BaseHook
     public ?string $cardLastFour  = null;
     public ?string $cardType      = null;
     public ?string $cardExpDate   = null;
-    public ?int    $testMode      = null;
+    public ?bool   $testMode      = null;
     public ?string $status        = null;
     public ?string $operationType = null;
 
@@ -42,10 +42,10 @@ class HookCheck extends BaseHook
     public ?string $issuerBankCountry = null;
     public ?string $description       = null;
     public ?string $data              = null;
-    public ?string $paymentAmount     = null;
+    public ?float  $paymentAmount     = null;
     public ?string $paymentCurrency   = null;
-    public ?string $ipLatitude        = null;
-    public ?string $ipLongitude       = null;
+    public ?float  $ipLatitude        = null;
+    public ?float  $ipLongitude       = null;
     public ?string $cardProduct       = null;
     public ?string $paymentMethod     = null;
 }

@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Owlookit\Tiptoppay;
 
-final class BaseHook
+use ReflectionClass;
+use ReflectionNamedType;
+use ReflectionProperty;
+
+class BaseHook
 {
     /**
      * @var array<string, mixed>
@@ -30,18 +34,22 @@ final class BaseHook
 
     private function fill(): void
     {
-        $modelFields = array_keys(get_object_vars($this));
+        $reflection = new ReflectionClass($this);
 
-        foreach ($modelFields as $key) {
+        foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC | ReflectionProperty::IS_PROTECTED) as $property) {
+            $key = $property->getName();
+
             if ($key === 'request') {
                 continue;
             }
 
             $requestValue = $this->resolveRequestValue($key);
 
-            if ($requestValue !== null) {
-                $this->{$key} = $requestValue;
+            if ($requestValue === null) {
+                continue;
             }
+
+            $this->{$key} = $this->castValueForProperty($property, $requestValue);
         }
     }
 
@@ -51,7 +59,7 @@ final class BaseHook
             $property,
             ucfirst($property),
             $this->camelToSnake($property),
-            strtoupper(substr($property, 0, 1)) . substr($property, 1),
+            strtoupper($property[0]) . substr($property, 1),
         ];
 
         foreach ($candidates as $candidate) {
@@ -61,6 +69,76 @@ final class BaseHook
         }
 
         return null;
+    }
+
+    private function castValueForProperty(ReflectionProperty $property, mixed $value): mixed
+    {
+        $type = $property->getType();
+
+        if (!$type instanceof ReflectionNamedType) {
+            return $value;
+        }
+
+        $typeName = $type->getName();
+
+        if ($value === null) {
+            return null;
+        }
+
+        return match ($typeName) {
+            'bool' => $this->castToBool($value),
+            'int' => $this->castToInt($value),
+            'float' => $this->castToFloat($value),
+            'string' => $this->castToString($value),
+            'array' => is_array($value) ? $value : [$value],
+            default => $value,
+        };
+    }
+
+    private function castToBool(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if (is_int($value) || is_float($value)) {
+            return $value !== 0;
+        }
+
+        if (is_string($value)) {
+            $normalized = mb_strtolower(trim($value));
+
+            return in_array($normalized, ['1', 'true', 'yes', 'on'], true);
+        }
+
+        return (bool) $value;
+    }
+
+    private function castToInt(mixed $value): int
+    {
+        if (is_bool($value)) {
+            return $value ? 1 : 0;
+        }
+
+        return (int) $value;
+    }
+
+    private function castToFloat(mixed $value): float
+    {
+        return (float) $value;
+    }
+
+    private function castToString(mixed $value): string
+    {
+        if (is_array($value)) {
+            return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '';
+        }
+
+        if (is_bool($value)) {
+            return $value ? 'true' : 'false';
+        }
+
+        return (string) $value;
     }
 
     private function camelToSnake(string $value): string
